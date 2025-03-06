@@ -1,18 +1,43 @@
-<div align="center">
-  <div>
-    <a href="https://tuist.io" target="_blank"><img src="assets/header.jpg" alt="header"/></a>
-  </div>
-  <img src="https://api.codemagic.io/apps/65ca555c190cfbe9f5dd792f/unit_tests/status_badge.svg" alt="CI status">
-  <img src="https://img.shields.io/github/commit-activity/w/tuist/tuist?style=flat-square&label=commits" alt="Commit Activity">
-  <a href="https://fosstodon.org/@tuist"><img src="https://img.shields.io/badge/tuist-gray.svg?logo=mastodon&logoColor=f5f5f5" alt="Mastodon badge"></a>
-  <a href="https://bsky.app/profile/tuist.dev"><img src="https://img.shields.io/badge/tuist-gray.svg?logo=bluesky" alt="Bluesky badge"></a>
-  <a href="https://join.slack.com/t/tuistapp/shared_invite/zt-1lqw355mp-zElRwLeoZ2EQsgGEkyaFgg"><img src="https://img.shields.io/badge/tuist-gray.svg?logo=slack" alt="Slack Workspace"></a>
-  <a href="https://t.me/tuist"><img src="https://img.shields.io/badge/tuist-gray.svg?logo=telegram" alt="Slack Workspace"></a>
-  <div>
-    <a href="https://cal.com/team/tuist/cloud?utm_source=banner&utm_campaign=oss" target="_blank"><img alt="Book us with Cal.com" src="https://cal.com/book-with-cal-dark.svg" width="150"/></a>
-  </div>
-  <a title="Crowdin" target="_blank" href="https://crowdin.com/project/tuist-documentation"><img src="https://badges.crowdin.net/tuist-documentation/localized.svg"></a>
-</div>
+# Tuist CLI (forked by Basenji Apps)
+## Reasons for the fork
+1. Currently, Tuist doesn't support the new xcstrings catalogs (the PR is in progress though — here is [the link](https://github.com/tuist/tuist/issues/6048)).
+2. To get compiler string collection behavior to work, the xcstrings file should be linked to the same target with the code where the localized strings are initialized.
+3. Tuist defaults to a scheme where the code of the module is separated from the resources. When you define the `sources` and `resources` pattern lists in the target configuration, these patters get filtered by the file extension. Sadly, this behavior can't be changed from the Tuist manifest.
+4. Tuist use the XcodeGraph library to build models of the Xcode projects. Here is [the link to the forked version](https://github.com/basenjiapps/XcodeGraph/).
+5. So, to make everything work, we need to override the file extensions allowed in the `sources` pattern list. Here is [the link](https://github.com/basenjiapps/XcodeGraph/commit/bc33db267b552b589564ef92dc46bf4ca96509b9) to commit where it's happenning.
+6. The next step is to compile our own binary of the Tuist CLI — with the changes we made in the XcodeGraph library.
+7. To do so, run the compilation script:
+```bash
+./.mise/tasks/bundle/cli
+```
+8. To make the compilation script work locally, some changes were needed. Check out the latest commits in this forked repository to learn more.
+8. When everything is done, go to the `build` folder to get the build artifacts. Unzip the `tuist.zip` file.
+9. Get the path to the current Tuist CLI binary used by your system. To do so, run either `asdf which tuist` or `which tuist` command. Open the enclosing directory.
+10. Copy all the files from the unzipped folder (including framework directories) to the installation directory.
+11. Run the `tuist` command to check if everything works as expected.
+12. To properly link the xcstrings file to the target, use the `sources` pattern list in the target configuration. Here is an example:
+```swift
+...
+sources: [
+    "Sources/**",
+    // this line is needed to link the string catalog to the code target
+    "Resources/**.xcstrings"
+],
+resources: [
+    // no need to explicitly include the xcstrings file here — it will be linked
+    // along with the other resource files
+    "Resources/**"
+],
+...
+```
+13. Run the `tuist generate` command to update the Xcode project, then select the string catalog in the freshly configured target and check the `Target Membership` in the `File Inspector` tab. It should look like this:
+
+![Target Membership](assets/targets.jpeg)
+
+14. Learn more in [this Coda document](https://coda.io/d/iOS_dfbghNtOqS9/Localization_suiUicKS#_luXD3MvM).
+15. The current version defaults to the 4.40.0 version of Tuist CLI. Merge the latest changes from the main repo if needed.
+16. Here is the repo with the compiled binary and installation instructions — [link](https://github.com/basenjiapps/tuist-cli-binary).
+
 
 ## 🕺 What's Tuist
 

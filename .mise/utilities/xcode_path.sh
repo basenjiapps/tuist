@@ -6,7 +6,7 @@
 # selected in the environment.
 
 set -e
-
+MISE_PROJECT_ROOT=$(pwd)
 source $MISE_PROJECT_ROOT/.mise/utilities/setup.sh
 
 # Check for jq
