@@ -17,6 +17,8 @@ final class GenerateService {
     private let generatorFactory: GeneratorFactorying
     private let pluginService: PluginServicing
     private let configLoader: ConfigLoading
+    private let environment: Environmenting
+    private let xcstringsLinker: XCStringsLinking
 
     init(
         cacheStorageFactory: CacheStorageFactorying,
@@ -25,7 +27,10 @@ final class GenerateService {
         timeTakenLoggerFormatter: TimeTakenLoggerFormatting = TimeTakenLoggerFormatter(),
         opener: Opening = Opener(),
         pluginService: PluginServicing = PluginService(),
-        configLoader: ConfigLoading = ConfigLoader(manifestLoader: ManifestLoader(), warningController: WarningController.shared)
+        configLoader: ConfigLoading = ConfigLoader(manifestLoader: ManifestLoader(), warningController: WarningController.shared),
+        environment: Environmenting = Environment.shared,
+        xcstringsLinker: XCStringsLinking = XCStringsLinker()
+        
     ) {
         self.generatorFactory = generatorFactory
         self.cacheStorageFactory = cacheStorageFactory
@@ -34,6 +39,8 @@ final class GenerateService {
         self.opener = opener
         self.pluginService = pluginService
         self.configLoader = configLoader
+        self.environment = environment
+        self.xcstringsLinker = xcstringsLinker
     }
 
     func run(
@@ -59,6 +66,9 @@ final class GenerateService {
         analyticsDelegate?.cacheableTargets = environment.cacheableTargets
         analyticsDelegate?.cacheItems = environment.targetCacheItems.values.flatMap(\.values)
             .sorted(by: { $0.name < $1.name })
+        if self.environment.tuistVariables["TUIST_PRODUCT_TYPE"] != "dynamic" {
+            try xcstringsLinker.link(path: workspacePath)
+        }
         if !noOpen {
             try await opener.open(path: workspacePath)
         }
